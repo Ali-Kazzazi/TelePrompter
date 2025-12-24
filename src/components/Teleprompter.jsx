@@ -49,7 +49,7 @@ export default function Teleprompter({
 
   /* ---------- POINTER DRAG (MOUSE + TOUCH) ---------- */
   const onPointerDown = (e) => {
-    if (playing) return;
+    // if (playing) return;
 
     dragging.current = true;
     lastY.current = e.clientY;

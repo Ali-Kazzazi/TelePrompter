@@ -63,14 +63,14 @@ http://localhost:5173
 6. Press Pause to stop and edit again
 
 ### Project Structure
-src/
-├── components/
-│   ├── Teleprompter.jsx
-│   ├── Controls.jsx
-│   └── ScriptEditor.jsx
-├── App.jsx
-├── main.jsx
-└── index.css
+ - src/
+   - components/
+     - Teleprompter.jsx
+     - Controls.jsx
+     - ScriptEditor.jsx
+- App.jsx
+- main.jsx
+- index.css
 
 ### Controls
 | Action                    | Input                   |

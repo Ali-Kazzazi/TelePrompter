@@ -7,12 +7,13 @@ export default function ScriptEditor({ text, setText, visible }) {
 
   if (!visible) return null;
 
-  const onMouseDown = (e) => {
+  const onPointerDown = (e) => {
     dragging.current = true;
     last.current = { x: e.clientX, y: e.clientY };
+    e.target.setPointerCapture(e.pointerId);
   };
 
-  const onMouseMove = (e) => {
+  const onPointerMove = (e) => {
     if (!dragging.current) return;
 
     const dx = e.clientX - last.current.x;
@@ -22,21 +23,19 @@ export default function ScriptEditor({ text, setText, visible }) {
     last.current = { x: e.clientX, y: e.clientY };
   };
 
-  const stopDrag = () => {
+  const onPointerUp = (e) => {
     dragging.current = false;
+    e.target.releasePointerCapture(e.pointerId);
   };
 
   return (
     <div
-      onMouseMove={onMouseMove}
-      onMouseUp={stopDrag}
-      onMouseLeave={stopDrag}
       style={{
         position: "fixed",
         left: pos.x,
         top: pos.y,
-        width: 420,
-        height: 320,
+        width: 360,
+        height: 280,
         background: "#111",
         border: "1px solid #333",
         zIndex: 1000,
@@ -44,36 +43,36 @@ export default function ScriptEditor({ text, setText, visible }) {
         flexDirection: "column"
       }}
     >
-      {/* Header (Drag Handle) */}
+      {/* Drag Handle */}
       <div
-        onMouseDown={onMouseDown}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
         style={{
           height: 32,
           background: "#1a1a1a",
           cursor: "move",
           padding: "6px 10px",
-          fontSize: 14,
           userSelect: "none",
-          borderBottom: "1px solid #333",
+          touchAction: "none",
+          borderBottom: "1px solid #333"
         }}
       >
         Script Editor
       </div>
 
-      {/* Text Area */}
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Paste your script here..."
         style={{
           flex: 1,
           background: "#000",
           color: "#f1f1f1",
-          fontSize: 16,
-          resize: "none",
           border: "none",
           outline: "none",
-          padding: 10
+          resize: "none",
+          padding: 10,
+          fontSize: 16
         }}
       />
     </div>

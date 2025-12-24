@@ -18,13 +18,11 @@ export default function Teleprompter({
   const dragging = useRef(false);
   const lastY = useRef(0);
 
-  /* ---------- AUTO SCROLL (FIXED) ---------- */
+  /* ---------- AUTO SCROLL ---------- */
   useEffect(() => {
     if (!playing) {
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
       lastTimeRef.current = null;
       return;
     }
@@ -34,29 +32,47 @@ export default function Teleprompter({
 
       const delta = time - lastTimeRef.current;
       scrollRef.current += (speed * delta) / 1000;
-
       containerRef.current.scrollTop = scrollRef.current;
-      lastTimeRef.current = time;
 
+      lastTimeRef.current = time;
       rafIdRef.current = requestAnimationFrame(loop);
     };
 
     rafIdRef.current = requestAnimationFrame(loop);
 
     return () => {
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
       lastTimeRef.current = null;
     };
   }, [playing, speed]);
 
-  /* ---------- ARROW KEY MOVE ---------- */
+  /* ---------- POINTER DRAG (MOUSE + TOUCH) ---------- */
+  const onPointerDown = (e) => {
+    if (playing) return;
+
+    dragging.current = true;
+    lastY.current = e.clientY;
+    e.target.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e) => {
+    if (!dragging.current) return;
+
+    const delta = e.clientY - lastY.current;
+    setOffsetY(y => y + delta);
+    lastY.current = e.clientY;
+  };
+
+  const onPointerUp = (e) => {
+    dragging.current = false;
+    e.target.releasePointerCapture(e.pointerId);
+  };
+
+  /* ---------- ARROW KEYS (DESKTOP ONLY) ---------- */
   useEffect(() => {
     const onKey = (e) => {
       if (playing) return;
-
       if (e.key === "ArrowUp") setOffsetY(y => y + 10);
       if (e.key === "ArrowDown") setOffsetY(y => y - 10);
     };
@@ -65,44 +81,26 @@ export default function Teleprompter({
     return () => window.removeEventListener("keydown", onKey);
   }, [playing, setOffsetY]);
 
-  /* ---------- MOUSE DRAG ---------- */
-  const onMouseDown = (e) => {
-    if (playing) return;
-    dragging.current = true;
-    lastY.current = e.clientY;
-  };
-
-  const onMouseMove = (e) => {
-    if (!dragging.current) return;
-    const delta = e.clientY - lastY.current;
-    setOffsetY(y => y + delta);
-    lastY.current = e.clientY;
-  };
-
-  const onMouseUp = () => {
-    dragging.current = false;
-  };
-
   return (
     <div
       ref={containerRef}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
       style={{
         height: "100vh",
         overflow: "hidden",
-        cursor: playing ? "default" : "grab",
+        touchAction: "none", // IMPORTANT for mobile
         transform: mirrored ? "scaleX(-1)" : "none"
       }}
     >
       <div
-        onMouseDown={onMouseDown}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
         style={{
           padding: "40vh 10vw",
           fontSize,
           lineHeight: 1.7,
-          transform: `translateY(${offsetY}px)`
+          transform: `translateY(${offsetY}px)`,
+          cursor: playing ? "default" : "grab"
         }}
       >
         {text}
